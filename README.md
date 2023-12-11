@@ -1,4 +1,4 @@
-# Build Real-Time Streaming Demo Web App (React) with Amazon IVS
+# Build Real-Time Streaming Demo Web App (ReactJS) with Amazon IVS
 
 ![Webpage multiple participants](./public/real-time-top-react.png)
 
