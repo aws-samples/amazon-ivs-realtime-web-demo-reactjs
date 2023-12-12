@@ -1,4 +1,4 @@
-# Amazon IVS Real Time Web Walkthrough ReactJS
+# Amazon IVS Real-Time for Web Demo ReactJS
 
 ![Webpage multiple participants](./public/real-time-top-react.png)
 
