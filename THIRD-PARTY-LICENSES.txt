@@ -1,0 +1,9 @@
+The Amazon IVS Real-time Web Demo ReactJS includes the following third-party assets:
+
+Next.js; https://github.com/vercel/next.js/
+
+Milligram CSS - v1.4.1, https://milligram.io/
+
+ESLint - https://eslint.org/
+
+next/font; https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
