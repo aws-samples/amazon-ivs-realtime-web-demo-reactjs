@@ -16,8 +16,9 @@ You will use:
 - [ESLint](https://eslint.org/) which is a code quality and consistency tool that helps developers catch mistakes and bugs early during the development process.
 - [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+This repository contains two directories: /hello-world/client and /hello-world-with-grid-layout/client. These directories contain sample code in reactJs for a real-time interactive web application using Amazon IVS broadcast SDK and /hello-world-with-grid-layout/client has an additional feature to support dynamic grid layout when multiple participants join a stage. You can choose to run the finished code or create app from scratch as laid down below - 
+
 ## You will learn how to:
-This repository contains two directories: /hello-world/client and /hello-world-with-grid-layout/client. These directories contain sample code in reactJs for a real-time interactive web application using Amazon IVS broadcast SDK and /hello-world-with-grid-layout/client has an additional feature to support dynamic grid layout when multiple participants join a stage. You can choose to run the finished code or create app from scratch following steps below for each of the options - 
 
 - [Run the finished code](#run-the-finished-code)
 - [Create app from scratch](#create-app-from-scratch)
@@ -46,7 +47,7 @@ This repository contains two directories: /hello-world/client and /hello-world-w
 
 ### 2. Create a stage
 
-- a. Navigate to the client folder of the `hello-world` (hello-world/client) or `hello-world-with-grid` repository.
+- a. Clone this repository and navigate to the client folder of the `hello-world` (hello-world/client) or `hello-world-with-grid` repository.
 - b. Inside your terminal, run the following commands then navigate to `http://localhost:3000`:
 
   ```
