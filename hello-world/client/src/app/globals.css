@@ -1,0 +1,180 @@
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+html,
+body {
+  margin: 2rem;
+  box-sizing: border-box;
+  height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: rgb(var(--foreground-rgb));
+  background: white
+}
+
+hr {
+  margin: 1rem 0;
+}
+
+table {
+  display: table;
+}
+
+canvas {
+  margin-bottom: 1rem;
+  background: grey;
+}
+
+video {
+  margin-bottom: 1rem;
+  background: black;
+  max-width: 100%;
+  max-height: 150px;
+  aspect-ratio: 16 / 9;
+  border: 0.5rem solid #555;
+  border-radius: 0.5rem;
+  width: 100%;
+}
+
+h3 {
+  display: flex;
+  justify-content: center;
+  padding-top: 3rem
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+}
+
+.log {
+  flex: none;
+  height: 300px;
+}
+
+.content {
+  flex: 1 0 auto;
+}
+
+.margin-top {
+  margin-top: 5rem
+}
+
+.button-container {
+  display: flex !important;
+  margin-top: 2.5rem;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.button-container .button {
+    width: 45%
+}
+
+.local-container {
+  position: relative;
+}
+
+.static-controls {
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-align: center;
+}
+
+.static-controls button {
+  display: inline-block;
+  margin: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+.participant-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  margin: 1rem;
+}
+
+.relative {
+  position: relative;
+}
+
+.overlay-pill {
+  position: absolute;
+  bottom: 40px;
+  left: 24px;
+  padding: 0px 12px;
+  background-color: #fff;
+  color: black;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.placeholder {
+  background-color: #333333;
+  display: flex;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.placeholder span {
+  margin: auto;
+  color: white;
+}
+
+.device-container {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+.local-video {
+  max-height: 300px;
+  display: inline-block;
+  width: 100vw;
+  max-width: 500px
+}
+
+.video-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.margin {
+  margin: 3rem;
+}
+
+.remote-participant-video {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  width: 100%;
+  height: auto;
+  max-width: 300px;
+  aspect-ratio: 16 / 9;
+}
+
+.margin-right {
+  margin-right: 1rem;
+}
