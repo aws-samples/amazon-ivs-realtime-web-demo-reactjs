@@ -1,3 +1,6 @@
+export const CAMERA = "camera";
+export const MIC = "mic";
+
 /**
  * Returns all devices available on the current device
  */
@@ -22,29 +25,6 @@ export const getDevices = async () => {
 };
 
 /**
- * Function gets the video and audio devices connected to the laptop and stores them in the state
- */
-export const handleDeviceUpdate = async (
-  updateVideoDevices,
-  updateAudioDevices,
-  updateLocalVideo,
-  updateLocalAudio
-) => {
-  try {
-    const { videoDevices, audioDevices } = await getDevices();
-    updateVideoDevices(videoDevices);
-    updateLocalVideo(videoDevices[0]?.deviceId);
-
-    updateAudioDevices(audioDevices);
-    updateLocalAudio(audioDevices[0]?.deviceId);
-  } catch (error) {
-    // Handle any errors that may occur during the device update process
-    console.error("An error occurred during device update:", error);
-    // You can add additional error-handling logic here as needed
-  }
-};
-
-/**
  * Gets the media stream for the specified device ID and type.
  * @param {string} deviceId - The device ID.
  * @param {string} mediaType - The type of media ('video' or 'audio').
@@ -53,38 +33,45 @@ export const handleDeviceUpdate = async (
 export const getMediaForDevices = async (deviceId, mediaType) => {
   const mediaConstraints = {
     video: {
-      deviceId: mediaType === "video" && deviceId ? { exact: deviceId } : null,
+      deviceId: mediaType === CAMERA && deviceId ? { exact: deviceId } : null,
     },
     audio: {
-      deviceId: mediaType === "audio" && deviceId ? { exact: deviceId } : null,
+      deviceId: mediaType === MIC && deviceId ? { exact: deviceId } : null,
     },
   };
 
   return navigator.mediaDevices.getUserMedia(mediaConstraints);
 };
 
-// Function to handle toggling of media, takes in deviceType, stage, and setIsHidden as parameters
-export const handleMediaToggle = (deviceType, stage, setIsHidden) => {
-  // Check if the type is 'camera', if so, toggle the video stream
-  if (deviceType === "camera") {
+// Function toggles the mute status of the specified device type (CAMERA or MIC) for the local participant in a given stage.
+// Uses stageRef to access the current participant's stream and updates the state (setIsDeviceStopped) accordingly.
+export const handleMediaToggle = (deviceType, stageRef, setIsDeviceStopped) => {
+  // Check if the type is 'camera'; if so, toggle the video stream
+  if (deviceType === CAMERA) {
     // Access the video stream of the local participant from the stage
-    const { videoStream } = stage.localParticipant;
+    const { videoStream } = stageRef.current.localParticipant;
+
     // Get the current status of the video stream
     const isHidden = videoStream.isMuted;
+
     // Toggle the mute status of the video stream
     videoStream.setMuted(!isHidden);
+
     // Update the state to reflect the change in visibility
-    setIsHidden(!isHidden);
+    setIsDeviceStopped(!isHidden);
   }
   // If the type is 'mic', toggle the audio stream
-  else if (deviceType === "mic") {
+  else if (deviceType === MIC) {
     // Access the audio stream of the local participant from the stage
-    const { audioStream } = stage.localParticipant;
+    const { audioStream } = stageRef.current.localParticipant;
+
     // Get the current status of the audio stream
     const isMuted = audioStream.isMuted;
+
     // Toggle the mute status of the audio stream
     audioStream.setMuted(!isMuted);
+
     // Update the state to reflect the change in muting
-    setIsHidden(!isMuted);
+    setIsDeviceStopped(!isMuted);
   }
 };

@@ -8,12 +8,14 @@ const LocalParticipantVideo = ({
   if (!isInitializeComplete) return; // If initialization is not complete, return
 
   const { participant, streams } = localParticipantInfo; // Destructure the participant and streams from localParticipantInfo
+
   const { username } = participant?.attributes; // Destructure the username from the participant attributes
 
   let streamsToDisplay = streams; // Initialize streamsToDisplay with the local streams
 
   const { StreamType } = IVSBroadcastClient; // Destructure StreamType from IVSBroadcastClient
-  streamsToDisplay = streams.filter(
+
+  streamsToDisplay = streams?.filter(
     (stream) => stream?.streamType === StreamType?.VIDEO // Filter the streams based on the streamType being video
   );
 

@@ -1,10 +1,19 @@
 "use client";
 // Importing the necessary dependencies for managing state
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Script from "next/script";
 
-import { handleDeviceUpdate, handleMediaToggle } from "./utils/mediaDevices";
-import { leaveStage, joinStage } from "./utils/stageUtils";
+import {
+  getDevices,
+  handleMediaToggle,
+  MIC,
+  CAMERA,
+} from "./utils/mediaDevices";
+import {
+  leaveStage,
+  joinStage,
+  createLocalStageStream,
+} from "./utils/stageUtils";
 
 import Header from "./components/Header";
 import Input from "./components/Input";
@@ -12,44 +21,113 @@ import ParticipantVideos from "./components/ParticipantVideos";
 import Select from "./components/Select";
 
 export default function Home() {
-  // Initialize a state variable to manage the muted status of the microphone
-  const [isMicMuted, setIsMicMuted] = useState(false);
-
-  // Initialize a state variable to manage the visibility status of the camera
-  const [isCameraHidden, setIsCameraHidden] = useState(false);
-
   // Initializing a state variable and its update function
   const [isInitializeComplete, setIsInitializeComplete] = useState(false);
 
   // Using the useState hook to create and manage state for video and audio devices and their selections
   const [videoDevices, setVideoDevices] = useState([]); // Stores the available video devices
   const [audioDevices, setAudioDevices] = useState([]); // Stores the available audio devices
-  const [selectedVideoDevice, setSelectedVideoDevice] = useState(null); // Tracks the selected video device
-  const [selectedAudioDevice, setSelectedAudioDevice] = useState(null); // Tracks the selected audio device
+  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState(null); // Tracks the selected video device
+  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState(null); // Tracks the selected audio device
 
   // Initialize state for the participant token as an empty string
   const [participantToken, setParticipantToken] = useState("");
 
   // Initialize state variables for managing the current stage, connection status, participant list, and local participant information
-  const [stage, setStage] = useState(null); // Manages the current stage
   const [isConnected, setIsConnected] = useState(false); // Tracks the connection status
   const [participants, setParticipants] = useState([]); // Manages the list of participants
-  const [localParticipant, setLocalParticipant] = useState({}); // Manages the local participant information
+
+  // Create a ref for the stage to hold a reference to the IVS stage instance.
+  const stageRef = useRef(undefined);
+
+  // Create a ref for the strategy to hold a reference to the strategy configuration used in the IVS stage.
+  const strategyRef = useRef();
+
+  // Initialize a state variable to manage the muted status of the microphone
+  const [isMicMuted, setIsMicMuted] = useState(true);
+
+  // Initialize a state variable to manage the visibility status of the camera
+  const [isCameraHidden, setIsCameraHidden] = useState(false);
+
+  /**
+   * Function gets the video and audio devices connected to the laptop and stores them in the state
+   */
+  const handleDeviceUpdate = async () => {
+    try {
+      const { videoDevices, audioDevices } = await getDevices();
+      setVideoDevices(videoDevices);
+      setSelectedVideoDeviceId(videoDevices[0]?.deviceId);
+
+      setAudioDevices(audioDevices);
+      setSelectedAudioDeviceId(audioDevices[0]?.deviceId);
+    } catch (error) {
+      // Handle any errors that may occur during the device update process
+      console.error("An error occurred during device update:", error);
+      // You can add additional error-handling logic here as needed
+    }
+  };
 
   /**
    * Initialize after the client is loaded
    */
   const initialize = async () => {
     // Call the handleDeviceUpdate function to update the video and audio devices
-    handleDeviceUpdate(
-      setVideoDevices, // Function to set the video devices
-      setAudioDevices, // Function to set the audio devices
-      setSelectedVideoDevice, // Function to set the selected video device
-      setSelectedAudioDevice // Function to set the selected audio device
-    );
+    handleDeviceUpdate();
     // Set the value of isInitializeComplete to true
     setIsInitializeComplete(true);
   };
+
+  const updateLocalParticipantMedia = async (localParticipant) => {
+    const { participant } = localParticipant;
+
+    // Create new local streams
+    const newVideoStream = await createLocalStageStream(
+      selectedVideoDeviceId,
+      CAMERA
+    );
+    const newAudioStream = await createLocalStageStream(
+      selectedAudioDeviceId,
+      MIC
+    );
+
+    // Update the streams array with the new streams
+    const updatedStreams = [newVideoStream, newAudioStream];
+
+    const updatedParticipant = {
+      participant,
+      streams: updatedStreams,
+    };
+
+    // Find the index of the local participant
+    const localParticipantIndex = participants.findIndex(
+      (participant) => participant.participant.isLocal
+    );
+
+    const updatedParticipants = [...participants];
+
+    // Replace the participant at the specified index with the updated participant
+    updatedParticipants[localParticipantIndex] = updatedParticipant;
+
+    setParticipants([...updatedParticipants]);
+
+    strategyRef.current.updateTracks(newAudioStream, newVideoStream);
+    stageRef.current.refreshStrategy();
+  };
+
+  useEffect(() => {
+    //Check to ensure that the stage and the strategy have completed initialization
+    const isInitializingStreams =
+      !strategyRef.current?.audioTrack && !strategyRef.current?.videoTrack;
+    if (!isInitializeComplete || isInitializingStreams) return; // If initialization is not complete, return
+
+    const localParticipant = participants.find(
+      (participant) => participant.participant.isLocal
+    );
+
+    if (localParticipant.streams) {
+      updateLocalParticipantMedia(localParticipant);
+    }
+  }, [selectedVideoDeviceId, selectedAudioDeviceId]);
 
   return (
     <div>
@@ -62,12 +140,12 @@ export default function Home() {
       <div className="row">
         <Select
           deviceType="Camera"
-          updateDevice={setSelectedVideoDevice}
+          updateDevice={setSelectedVideoDeviceId}
           devices={videoDevices}
         />
         <Select
           deviceType="Microphone"
-          updateDevice={setSelectedAudioDevice}
+          updateDevice={setSelectedAudioDeviceId}
           devices={audioDevices}
         />
         <Input
@@ -82,14 +160,14 @@ export default function Home() {
               onClick={() =>
                 joinStage(
                   isInitializeComplete,
-                  selectedVideoDevice,
-                  selectedAudioDevice,
                   participantToken,
+                  selectedAudioDeviceId,
+                  selectedVideoDeviceId,
+                  setIsConnected,
                   setIsMicMuted,
-                  setLocalParticipant,
                   setParticipants,
-                  setStage,
-                  setIsConnected
+                  stageRef,
+                  strategyRef
                 )
               }
             >
@@ -97,7 +175,7 @@ export default function Home() {
             </button>
             <button
               className="button"
-              onClick={() => leaveStage(stage, setIsConnected)}
+              onClick={() => leaveStage(stageRef.current, setIsConnected)}
             >
               Leave Stage
             </button>
@@ -118,14 +196,14 @@ export default function Home() {
             </div>
             <div className="static-controls">
               <button
-                onClick={() => handleMediaToggle("mic", stage, setIsMicMuted)}
+                onClick={() => handleMediaToggle(MIC, stageRef, setIsMicMuted)}
                 className="button"
               >
                 {isMicMuted ? "Unmute Mic" : "Mute Mic"}
               </button>
               <button
                 onClick={() =>
-                  handleMediaToggle("camera", stage, setIsCameraHidden)
+                  handleMediaToggle(CAMERA, stageRef, setIsCameraHidden)
                 }
                 className="button"
               >

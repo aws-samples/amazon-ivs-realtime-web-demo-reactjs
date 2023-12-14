@@ -13,7 +13,10 @@ const ParticipantVideos = ({
       let streamsToDisplay = streams; // Initialize streamsToDisplay with the remote streams
 
       return (
-        <div className={`participant-grid-container slot-${index + 1}`}>
+        <div
+          key={participant?.id}
+          className={`participant-grid-container slot-${index + 1}`}
+        >
           {/* Video container for the participant */}
           {/* Render the Video component with necessary props */}
           <Video
@@ -22,6 +25,7 @@ const ParticipantVideos = ({
             streamsToDisplay={streamsToDisplay} // Pass the streams to display
             username={username} // Pass the username
             participantSize={index + 1} // Pass the participant size
+            key={participant?.id}
           />
         </div>
       );

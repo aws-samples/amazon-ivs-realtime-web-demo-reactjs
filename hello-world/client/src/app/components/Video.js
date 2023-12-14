@@ -5,6 +5,7 @@ const Video = ({
   username, // Username of the participant
   participantSize, // Size of the participant
 }) => {
+
   return (
     // Container for the video with relative positioning
     <div className="relative">

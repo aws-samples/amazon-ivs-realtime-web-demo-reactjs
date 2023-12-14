@@ -1,4 +1,26 @@
-import { getMediaForDevices } from "./mediaDevices";
+import { getMediaForDevices, CAMERA, MIC } from "./mediaDevices";
+
+// Function creates a local stage stream based on the specified device ID and type (CAMERA or MIC).
+export const createLocalStageStream = async (deviceId, deviceType) => {
+  const { LocalStageStream } = IVSBroadcastClient;
+
+  // Warn and return if the device ID is null
+  if (!deviceId) {
+    console.warn("Attempted to set local media with a null device ID");
+    return;
+  }
+
+  // Get media stream for the specified device
+  const newDevice = await getMediaForDevices(deviceId, deviceType);
+
+  // Create a LocalStageStream based on the device type
+  const stageStream =
+    deviceType === CAMERA
+      ? new LocalStageStream(newDevice.getVideoTracks()[0])
+      : new LocalStageStream(newDevice.getAudioTracks()[0]);
+
+  return stageStream;
+};
 
 /**
  * Sets up the Strategy for 3 major actions a user performs: which streams to publish, should streams be published, subcribing to streams
@@ -7,9 +29,8 @@ import { getMediaForDevices } from "./mediaDevices";
  * @returns strategy object
  */
 
+// Function creates a strategy object for IVS stage, considering initialization status
 const setupStrategy = (
-  cameraStageStream, // Parameter representing the camera stage stream
-  micStageStream, // Parameter representing the microphone stage stream
   isInitializeComplete // Parameter representing the initialization completion status
 ) => {
   // Check if the initialization is complete; if not, return nothing
@@ -20,21 +41,32 @@ const setupStrategy = (
   const { SubscribeType } = IVSBroadcastClient; // Reference the SubscribeType property from the IVSBroadcastClient object
   // More information can be found here: https://aws.github.io/amazon-ivs-web-broadcast/docs/v1.3.1/sdk-reference/enums/SubscribeType?_highlight=subscribetype
 
-  // Define the strategy object
   const strategy = {
-    // Method to determine the stage streams to publish
+    audioTrack: undefined,
+    videoTrack: undefined,
+
+    // Method to update audio and video tracks
+    updateTracks(newAudioTrack, newVideoTrack) {
+      this.audioTrack = newAudioTrack;
+      this.videoTrack = newVideoTrack;
+    },
+
+    // Method to define streams to publish
     stageStreamsToPublish() {
-      return [cameraStageStream, micStageStream]; // Return an array containing cameraStageStream and micStageStream
+      return [this.audioTrack, this.videoTrack];
     },
-    // Method to determine whether to publish the participant
-    shouldPublishParticipant() {
-      return true; // Always return true
+
+    // Method to determine participant publishing
+    shouldPublishParticipant(participant) {
+      return true;
     },
-    // Method to determine the type of subscription for participants
-    shouldSubscribeToParticipant() {
-      return SubscribeType.AUDIO_VIDEO; // Return the specific type of subscription
+
+    // Method to determine type of subscription for participants
+    shouldSubscribeToParticipant(participant) {
+      return SubscribeType.AUDIO_VIDEO;
     },
   };
+
   return strategy; // Return the strategy object
 };
 
@@ -44,43 +76,40 @@ const setupStrategy = (
 
 export const joinStage = async (
   isInitializeComplete, // Indicates if the initialization is complete
-  selectedVideoDevice, // Represents the selected video device
-  selectedAudioDevice, // Represents the selected audio device
   participantToken, // Token of the participant
+  selectedAudioDeviceId, // Represents the selected audio device
+  selectedVideoDeviceId, // Represents the selected video device
+  setIsConnected, // Setter for the connection status
   setIsMicMuted, // Setter for the microphone mute state
-  setLocalParticipant, // Setter for the local participant
   setParticipants, // Setter for the list of participants
-  setStage, // Setter for the stage
-  setIsConnected // Setter for the connection status
+  stageRef, // Setter for the stage
+  strategyRef
 ) => {
   const {
     Stage, // Reference to the Stage class
-    LocalStageStream, // Reference to the LocalStageStream class
     StageEvents, // Reference to the StageEvents object
     ConnectionState, // Reference to the ConnectionState object
   } = IVSBroadcastClient; // IVS Broadcast Client object
 
   if (!isInitializeComplete) return; // If the initialization is not complete, stop execution and return
 
-  // Retrieve local camera and microphone
-  const localCamera = await getMediaForDevices(selectedVideoDevice, "video");
-  const localMic = await getMediaForDevices(selectedAudioDevice, "audio");
-
-  // Create LocalStageStreams for the camera and microphone
-  const cameraStageStream = new LocalStageStream(
-    localCamera.getVideoTracks()[0]
+  const cameraStageStream = await createLocalStageStream(
+    selectedVideoDeviceId,
+    CAMERA
   );
-  const micStageStream = new LocalStageStream(localMic.getAudioTracks()[0]);
+  const micStageStream = await createLocalStageStream(
+    selectedAudioDeviceId,
+    MIC
+  );
 
   // Set up the strategy for the stage
-  const strategy = setupStrategy(
-    cameraStageStream,
-    micStageStream,
-    isInitializeComplete
-  );
+  const strategy = setupStrategy(isInitializeComplete);
+  strategy.updateTracks(micStageStream, cameraStageStream);
+
+  strategyRef.current = strategy;
 
   // Create a new stage instance
-  let stage = new Stage(participantToken, strategy);
+  let stage = new Stage(participantToken, strategyRef.current);
 
   // Event listener for stage connection state changes
   stage.on(StageEvents.STAGE_CONNECTION_STATE_CHANGED, (state) => {
@@ -98,12 +127,15 @@ export const joinStage = async (
     (participant, streams) => {
       console.log("Participant Media Added: ", participant, streams);
 
-      // Set the local participant and update the list of participants
-      if (participant.isLocal) {
-        setLocalParticipant({ participant, streams });
-      }
       setParticipants((prevParticipants) => {
-        return [...prevParticipants, { participant, streams }];
+        const participantExists = prevParticipants.some(
+        (participantObj) => participantObj.participant.id === participant.id);
+
+        if (!participantExists) {
+          return [...prevParticipants, { participant, streams }];
+        } else {
+          return prevParticipants;
+        }
       });
     }
   );
@@ -129,7 +161,7 @@ export const joinStage = async (
     stage = null;
   }
 
-  setStage(stage); // Update the stage
+  stageRef.current = stage;
 };
 
 /**

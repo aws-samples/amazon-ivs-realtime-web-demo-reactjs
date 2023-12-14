@@ -35,7 +35,7 @@ table {
 
 canvas {
   margin-bottom: 1rem;
-  background: green;
+  background: grey;
 }
 
 video {
@@ -81,7 +81,7 @@ h3 {
 }
 
 .button-container .button {
-    width: 40%
+    width: 45%
 }
 
 .local-container {
