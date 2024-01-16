@@ -3091,3 +3091,6 @@ hello-world-with-grid-layout
 - If you are interested in building for mobile platforms, explore the sample demos for [iOS](https://github.com/aws-samples/amazon-ivs-real-time-for-ios-demo/) or [Android](https://github.com/aws-samples/amazon-ivs-real-time-for-android-demo/), and the supporting [serverless applications for real-time demo](https://github.com/aws-samples/amazon-ivs-real-time-serverless-demo/).
 
 - If you are planning on scaling your application look into using [AWS Amplify](https://aws.amazon.com/amplify/) / [AWS Lambda](https://aws.amazon.com/lambda/) for your backend.
+
+## License
+This project is licensed under the MIT-0 License. See the LICENSE file.
