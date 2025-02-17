@@ -88,7 +88,7 @@ export const joinStage = async (
   const {
     Stage, // Reference to the Stage class
     StageEvents, // Reference to the StageEvents object
-    ConnectionState, // Reference to the ConnectionState object
+    StageConnectionState, // Reference to the StageConnectionState object
   } = IVSBroadcastClient; // IVS Broadcast Client object
 
   if (!isInitializeComplete) return; // If the initialization is not complete, stop execution and return
@@ -114,7 +114,7 @@ export const joinStage = async (
   // Event listener for stage connection state changes
   stage.on(StageEvents.STAGE_CONNECTION_STATE_CHANGED, (state) => {
     // Update the connection status
-    setIsConnected(state === ConnectionState.CONNECTED);
+    setIsConnected(state === StageConnectionState.CONNECTED);
 
     // Mute the microphone stage stream and update the state for the mic button
     micStageStream.setMuted(true);
